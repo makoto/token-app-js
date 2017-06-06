@@ -4,8 +4,9 @@ const Fiat = require('./lib/Fiat')
 const account = '0x5a384227b65fa093dec03ec34e111db80a040615';
 const Web3 = require('web3');
 const url = 'https://mainnet.infura.io/V1LOapzeHsyDp8S1fcUF';
-const provider = new Web3.providers.HttpProvider(url)
+const provider = new Web3.providers.HttpProvider(url);
 const web3 = new Web3(provider);
+const numeral = require('numeral');
 //
 // function balanceOf(account){
 //   return web3.eth.getBalance(account).toNumber()
@@ -44,7 +45,7 @@ function onMessage(session, message) {
     sendMessage(session, 'The state has been reset');
   }
   var command_state = session.get('command_state')
-  sendMessage(session, 'command state is ' + command_state)
+  // sendMessage(session, 'command state is ' + command_state)
   switch(command_state){
     case 'add_account':
       var accounts = session.get('accounts') || [];
@@ -66,15 +67,23 @@ function onCommand(session, command) {
       break
     case 'display_balance':
       if (session.get('accounts').length == 0) {
-        sendMessage(session, 'empty')
+        sendMessage(session, 'No accounts have been added yet');
       }else{
-        sendMessage(session, `have ${session.get('accounts')} accounts`)
+        // sendMessage(session, `have ${session.get('accounts')} accounts`)
         var _accounts = session.get('accounts')
+        var total = 0;
         for (var i = 0; i < _accounts.length; i++) {
-          sendMessage(session, _accounts[i])
+          var account = _accounts[i];
+          var balance = web3.eth.getBalance(account).toNumber();
+          total+= balance;
+          balance = web3.fromWei(balance, 'ether');
+          balance = numeral(balance).format('0,0.000');
+          sendMessage(session, `${account.slice(0,7)}... has ${balance} ether`)
         }
+        total = web3.fromWei(total, 'ether');
+        total = numeral(total).format('0,0.000');
+        sendMessage(session, `The total balance is ${total} ether`)
       }
-
       break
     }
 }
