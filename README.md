@@ -1,64 +1,21 @@
-# Token SOFA App
+# Balances.
 
-This repo helps you build a [Token app](https://www.tokenbrowser.com) in Javascript.
+## Description.
 
-The sample bot can:
+I hate taking log of my family finance. I have to login to multiple bank accounts, download and import the monthly balance to my spreasheet, have to modify data format, and so on.
 
-* send messages
-* send and request money
-* create simple UI for buttons and menus
-* store sessions and state for each user
+With blockchain, it doesn't have to be that way. Whether you have lots of ether or ERC20 tokens across multiple accounts, they are all in one place.
 
-TODO
+`Balances` is a companion app that allows you to keep track of multiple balances.
 
-* sending image messages
-* creating web view UIs
+You can.
 
-## Launch your own Token app in 5 minutes
+- Add multiple ethereum address.
+- Display the aggregate balance of ether
 
-Read our [guide to creating a Token app](http://developers.tokenbrowser.com/docs/creating-a-token-app).
+## TODO
 
-When ready, fork this repo and deploy it to Heroku.
-
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
-
-Then check out [`src/bot.js`](src/bot.js) to start changing the bot logic.
-
-## Running locally with Docker
-
-You can run the project locally with
-
-```
-docker-compose up
-```
-
-If any new depencies are added you can rebuild the project with
-
-```
-docker-compose build
-```
-
-To reset the postgres database in your dev environment you can use
-
-```
-docker-compose down -v
-```
-
-## Architecture
-
-Deploying a Token app requires a few processes to run:
-
-* **token-headless-client**<br>
-  This is a client we provide (similar to the iOS or Android client) that provides a wrapper around the Token backend services. It also handles end-to-end encrypting all messages using the Signal protocol. It is written in Java and runs in the background, proxying all the requests to amd from your bot.
-* **redis**<br>
-  We use redis pub/sub to provide a connection between the token-headless-client and your bot.
-* **bot.js**<br>
-  This is where all your app logic lives.
-* **postgres**<br>
-  Postgres is used to store session data so you can persist state for each user who talks to your bot (similar to cookies in a web browser).
-
-![diagram](docs/images/app-architecture.png)
-
-## See also
-
-* [https://www.tokenbrowser.com]
+- Add multiple token address (or pre select from the list)
+- Display the aggregate balance of tokens
+- Display the aggregate balance of both token and ether
+- Toggle mainnet and testnet
