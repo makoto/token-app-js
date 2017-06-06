@@ -7,10 +7,6 @@ const url = 'https://mainnet.infura.io/V1LOapzeHsyDp8S1fcUF';
 const provider = new Web3.providers.HttpProvider(url);
 const web3 = new Web3(provider);
 const numeral = require('numeral');
-//
-// function balanceOf(account){
-//   return web3.eth.getBalance(account).toNumber()
-// }
 
 let bot = new Bot()
 
@@ -40,8 +36,7 @@ bot.onEvent = function(session, message) {
 
 function onMessage(session, message) {
   if (message.body == 'Reset') {
-    session.set('command_state', null);
-    session.set('accounts', []);
+    session.reset()
     sendMessage(session, 'The state has been reset');
   }
   var command_state = session.get('command_state')
@@ -66,7 +61,7 @@ function onCommand(session, command) {
       add_account_response(session)
       break
     case 'display_balance':
-      if (session.get('accounts').length == 0) {
+      if (session.get('accounts') == null || session.get('accounts').length == 0) {
         sendMessage(session, 'No accounts have been added yet');
       }else{
         // sendMessage(session, `have ${session.get('accounts')} accounts`)
