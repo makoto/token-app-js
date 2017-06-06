@@ -18,6 +18,7 @@ let bot = new Bot()
 bot.onEvent = function(session, message) {
   switch (message.type) {
     case 'Init':
+      session.set('accounts', []);
       welcome(session)
       console.log('***balance');
       break
@@ -37,14 +38,19 @@ bot.onEvent = function(session, message) {
 }
 
 function onMessage(session, message) {
+  if (message.body == 'Reset') {
+    session.set('command_state', null);
+    session.set('accounts', []);
+    sendMessage(session, 'The state has been reset');
+  }
   var command_state = session.get('command_state')
+  sendMessage(session, 'command state is ' + command_state)
   switch(command_state){
     case 'add_account':
-      session.set('accounts', message.body);
-      sendMessage(session, 'You added ' + message.body)
-      break;
-    case 'display_balance':
-      sendMessage(session, session.get('accounts') || 'none')
+      var accounts = session.get('accounts') || [];
+      accounts.push(message.body);
+      session.set('accounts', accounts);
+      sendMessage(session, 'You added ' + [message.body])
       break;
     default:
       welcome(session);
@@ -59,8 +65,16 @@ function onCommand(session, command) {
       add_account_response(session)
       break
     case 'display_balance':
-      sendMessage(session, session.get('accounts') || 'none')
-      sendMessage(session, session.get('accounts') || 'none')
+      if (session.get('accounts').length == 0) {
+        sendMessage(session, 'empty')
+      }else{
+        sendMessage(session, `have ${session.get('accounts')} accounts`)
+        var _accounts = session.get('accounts')
+        for (var i = 0; i < _accounts.length; i++) {
+          sendMessage(session, _accounts[i])
+        }
+      }
+
       break
     }
 }
@@ -70,13 +84,8 @@ function onPayment(session) {
 }
 
 function add_account_response(session){
-  sendMessage(session, 'Please copy&paste your ethe address');
+  sendMessageWithoutControl(session, 'Please copy&paste your ethe address below');
 }
-
-function display_balance_response(session){
-  sendMessage(session, 'display_balance response');
-}
-
 
 function eth(session){
   let balance = web3.eth.getBalance(account).toNumber();
@@ -104,6 +113,18 @@ function donate(session) {
 }
 
 // HELPERS
+
+function sendMessageWithoutControl(session, message) {
+  let controls = [
+    {type: 'button', label: 'Add Account', value: 'add_account'},
+    {type: 'button', label: 'Display Balance', value: 'display_balance'}
+  ]
+  session.reply(SOFA.Message({
+    body: message,
+    showKeyboard: false,
+  }))
+}
+
 
 function sendMessage(session, message) {
   let controls = [
