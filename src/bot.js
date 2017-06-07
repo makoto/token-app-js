@@ -131,7 +131,7 @@ function onCommand(session, command) {
             console.log('token_address', token_address);
             if (token_address) {
               var token = Token.at(token_address);
-              var token_balance = token.balanceOf(account);
+              var token_balance = token.balanceOf(account, {}, block);
               var token_in_ether = token_balance * rep_eth;
               console.log('REP->ETH', token_balance, token_in_ether, rep_eth)
               if (token_balance > 0) {
