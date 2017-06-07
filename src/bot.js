@@ -131,7 +131,7 @@ function add_accounts_response(session){
 function welcome(session) {
   console.log('aaa')
   console.log('ddd', )
-  sendMessage(session, `Welcome to TokenBalances.  `)
+  sendMessage(session, `Welcome to Balances.  `)
 }
 
 // HELPERS
