@@ -3,7 +3,7 @@ const SOFA = require('sofa-js')
 const Fiat = require('./lib/Fiat');
 const account = '0x5a384227b65fa093dec03ec34e111db80a040615';
 const Web3 = require('web3');
-const url = process.env.TOKEN_APP__WEB3_PROVIDER_URL;
+const url = 'https://mainnet.infura.io/NEefAs8cNxYfiJsYCQjc';
 const provider = new Web3.providers.HttpProvider(url);
 const web3 = new Web3(provider);
 const numeral = require('numeral');
@@ -21,7 +21,6 @@ bot.onEvent = function(session, message) {
     case 'Init':
       session.set('accounts', []);
       welcome(session)
-      console.log('***balance');
       break
     case 'Message':
       onMessage(session, message)
@@ -49,7 +48,6 @@ function onMessage(session, message) {
     case 'add_accounts':
       var list_of_account = message.body.split(/\n/);
       var account = message.body
-      console.log(list_of_account.join(','))
       var accounts = session.get('accounts') || [];
       list_of_account.forEach(function(account){
         if (accounts.indexOf(account) == -1) {
