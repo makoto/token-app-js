@@ -129,9 +129,7 @@ function add_accounts_response(session){
 }
 
 function welcome(session) {
-  console.log('aaa')
-  console.log('ddd', )
-  sendMessage(session, `Welcome to Balances.  `)
+  sendMessage(session, `Welcome to Balances.`)
 }
 
 // HELPERS
