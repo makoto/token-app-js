@@ -3,7 +3,7 @@ const SOFA = require('sofa-js')
 const Fiat = require('./lib/Fiat');
 const account = '0x5a384227b65fa093dec03ec34e111db80a040615';
 const Web3 = require('web3');
-const url = 'https://mainnet.infura.io/V1LOapzeHsyDp8S1fcUF';
+const url = process.env.TOKEN_APP__WEB3_PROVIDER_URL;
 const provider = new Web3.providers.HttpProvider(url);
 const web3 = new Web3(provider);
 const numeral = require('numeral');
@@ -131,6 +131,8 @@ function add_accounts_response(session){
 }
 
 function welcome(session) {
+  console.log('aaa')
+  console.log('ddd', )
   sendMessage(session, `Welcome to TokenBalances.  `)
 }
 
