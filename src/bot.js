@@ -40,17 +40,24 @@ bot.onEvent = function(session, message) {
 
 function onMessage(session, message) {
   if (message.body == 'Reset') {
-    session.reset()
+    session.reset();
+    session.set('accounts', []);
     sendMessage(session, 'The state has been reset');
   }
   var command_state = session.get('command_state')
   // sendMessage(session, 'command state is ' + command_state)
   switch(command_state){
     case 'add_account':
+      var account = message.body;
       var accounts = session.get('accounts') || [];
-      accounts.push(message.body);
-      session.set('accounts', accounts);
-      sendMessage(session, 'You added ' + [message.body])
+      console.log('aaa', account, accounts, accounts.indexOf(account))
+      if (accounts.indexOf(account) == -1) {
+        accounts.push(account);
+        session.set('accounts', accounts);
+        sendMessage(session, 'You added ' + message.body)
+      }else{
+        sendMessage(session, 'This account is already in the list');
+      }
       break;
     default:
       welcome(session);
@@ -66,8 +73,26 @@ function onCommand(session, command) {
   console.log('command', command)
   var arg = commands[1]
   switch (command) {
+    case 'list_accounts':
+      console.log('a1')
+      var _accounts = session.get('accounts');
+      console.log('a2')
+      console.log('_accounts', _accounts)
+      if (_accounts == null || _accounts.length == 0) {
+        console.log('a3')
+        sendMessage(session, 'No accounts are on the list');
+      }else{
+        console.log('a4')
+        for (var i = 0; i < _accounts.length; i++) {
+          sendMessage(session, _accounts[i]);
+        }
+        console.log('a5')
+      }
+      console.log('6')
+      break
     case 'reset_accounts':
       session.reset();
+      session.set('accounts', []);
       sendMessage(session, 'The accounts are all removed');
       break
     case 'add_account':
@@ -137,6 +162,7 @@ function sendMessage(session, message) {
       label: "Manage Accounts",
       controls: [
         {type: "button", label: "Add Account", value: `add_account`},
+        {type: "button", label: "List Accounts", value: `list_accounts`},
         {type: "button", label: "Reset Accounts", value: `reset_accounts`},
       ]
     },
