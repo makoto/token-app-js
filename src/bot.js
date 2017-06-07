@@ -10,6 +10,7 @@ const numeral = require('numeral');
 const block_interval = 15;
 global.fetch = require('node-fetch');
 const cc = require('cryptocompare');
+const moment = require('moment');
 
 let bot = new Bot()
 
@@ -65,6 +66,10 @@ function onCommand(session, command) {
   console.log('command', command)
   var arg = commands[1]
   switch (command) {
+    case 'reset_accounts':
+      session.reset();
+      sendMessage(session, 'The accounts are all removed');
+      break
     case 'add_account':
       add_account_response(session)
       break
@@ -77,7 +82,8 @@ function onCommand(session, command) {
         var current_block = web3.eth.blockNumber;
         var block = current_block - ( arg / block_interval);
         console.log(current_block, block);
-        sendMessage(session, `Your balance for ${date} (block ${block})`);
+        var formatted_date = moment(date).utc().format('MMMM Do YYYY, h:mm:ss a');
+        sendMessage(session, `Your balance for ${formatted_date} UTC (block ${block})`);
 
         // sendMessage(session, `have ${session.get('accounts')} accounts`)
         var _accounts = session.get('accounts')
@@ -93,7 +99,6 @@ function onCommand(session, command) {
 
         cc.priceHistorical('ETH', ['USD'], date)
         .then(prices => {
-          console.log(prices)
           var unit_price = prices['USD'];
           total = web3.fromWei(total, 'ether');
           var usd = numeral(total * unit_price).format('0,0.000');
@@ -101,18 +106,6 @@ function onCommand(session, command) {
           sendMessage(session, `The total balance is ETH ${total} ($${usd}, 1ETH = ${unit_price}USD)`)
         })
         .catch(console.error)
-
-        // Fiat.fetch().then((fiat) => {
-        //   total = web3.fromWei(total, 'ether');
-        //   console.log('fiat', fiat);
-        //   var usd = fiat.USD.fromEth(total);
-        //   total = numeral(total).format('0,0.000');
-        //   sendMessage(session, `The total balance is ETH ${total} ($${usd})`)
-        //
-        //   // Basic Usage:
-        //
-        //
-        // })
       }
       break
     }
@@ -139,8 +132,14 @@ const month_ago = yesterday * 30;
 const year_ago = yesterday * 365;
 function sendMessage(session, message) {
   let controls = [
-    {type: 'button', label: 'Add Account', value: 'add_account'},
-    // {type: 'button', label: 'Display Balance', value: 'display_balance'},
+    {
+      type: "group",
+      label: "Manage Accounts",
+      controls: [
+        {type: "button", label: "Add Account", value: `add_account`},
+        {type: "button", label: "Reset Accounts", value: `reset_accounts`},
+      ]
+    },
     {
       type: "group",
       label: "Display Balance",
