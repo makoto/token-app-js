@@ -46,16 +46,20 @@ function onMessage(session, message) {
   }
   var command_state = session.get('command_state')
   switch(command_state){
-    case 'add_account':
-      var account = message.body;
+    case 'add_accounts':
+      var list_of_account = message.body.split(/\n/);
+      var account = message.body
+      console.log(list_of_account.join(','))
       var accounts = session.get('accounts') || [];
-      if (accounts.indexOf(account) == -1) {
-        accounts.push(account);
-        session.set('accounts', accounts);
-        sendMessage(session, 'You added ' + message.body)
-      }else{
-        sendMessage(session, 'This account is already in the list');
-      }
+      list_of_account.forEach(function(account){
+        if (accounts.indexOf(account) == -1) {
+          accounts.push(account);
+          session.set('accounts', accounts);
+          sendMessage(session, `${account} is added in the list`);
+        }else{
+          sendMessage(session, `${account} is already in the list`);
+        }
+      })
       break;
     default:
       welcome(session);
@@ -84,8 +88,8 @@ function onCommand(session, command) {
       session.set('accounts', []);
       sendMessage(session, 'The accounts are all removed');
       break
-    case 'add_account':
-      add_account_response(session)
+    case 'add_accounts':
+      add_accounts_response(session)
       break
     case 'display_balance':
       if (session.get('accounts') == null || session.get('accounts').length == 0) {
@@ -114,7 +118,7 @@ function onCommand(session, command) {
           total = web3.fromWei(total, 'ether');
           var usd = numeral(total * unit_price).format('0,0.000');
           total = numeral(total).format('0,0.000');
-          sendMessage(session, `The total balance is ETH ${total} ($${usd}, 1ETH = ${unit_price}USD)`)
+          sendMessage(session, `The total ETH: ${total} \n($${usd}, 1ETH = ${unit_price}USD)`)
         })
         .catch(console.error)
       }
@@ -122,7 +126,7 @@ function onCommand(session, command) {
     }
 }
 
-function add_account_response(session){
+function add_accounts_response(session){
   sendMessage(session, 'Please copy&paste your ether address below');
 }
 
@@ -140,7 +144,7 @@ function sendMessage(session, message) {
       type: "group",
       label: "Manage Accounts",
       controls: [
-        {type: "button", label: "Add Account", value: `add_account`},
+        {type: "button", label: "Add Accounts", value: `add_accounts`},
         {type: "button", label: "List Accounts", value: `list_accounts`},
         {type: "button", label: "Reset Accounts", value: `reset_accounts`},
       ]
