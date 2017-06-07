@@ -38,6 +38,28 @@ bot.onEvent = function(session, message) {
   }
 }
 
+function onPayment(session, message) {
+  if (message.fromAddress == session.config.paymentAddress) {
+    // handle payments sent by the bot
+    if (message.status == 'confirmed') {
+      // perform special action once the payment has been confirmed
+      // on the network
+    } else if (message.status == 'error') {
+      // oops, something went wrong with a payment we tried to send!
+    }
+  } else {
+    // handle payments sent to the bot
+    if (message.status == 'unconfirmed') {
+      // payment has been sent to the ethereum network, but is not yet confirmed
+      sendMessage(session, `Thanks for the payment! 🙏`);
+    } else if (message.status == 'confirmed') {
+      // handle when the payment is actually confirmed!
+    } else if (message.status == 'error') {
+      sendMessage(session, `There was an error with your payment!🚫`);
+    }
+  }
+}
+
 function onMessage(session, message) {
   if (message.body == 'Reset') {
     session.reset();
