@@ -167,7 +167,7 @@ function add_accounts_response(session){
 }
 
 function welcome(session) {
-  sendMessage(session, `Welcome to Balances.`)
+  sendMessage(session, `Welcome to Balances. I am still a 👶. if I get stuck on a 🐛, simply type "Reset" in the command line.`)
 }
 
 // HELPERS
