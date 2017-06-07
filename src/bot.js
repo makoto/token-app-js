@@ -177,7 +177,7 @@ function sendMessage(session, message) {
         {type: "button", label: "Add Accounts", value: `add_accounts`},
         {type: "button", label: "List Accounts", value: `list_accounts`},
         {type: "button", label: "Reset Accounts", value: `reset_accounts`},
-        {type: "button", label: "Track Augur Token", value: `track_token 0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5`},
+        {type: "button", label: "Track Augur Token 👊", value: `track_token 0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5`},
       ]
     },
     {
