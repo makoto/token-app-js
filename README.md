@@ -20,3 +20,5 @@ You don't have ether? Then add [these two](https://medium.com/@slacknation/vital
 0xab5801a7d398351b8be11c439e05c5b3259aec9b
 0x1db3439a222c519ab44bb1144fc28167b4fa6ee6
 ```
+
+PS: If you are a Augur token holders, don't forget to `Track Augur Token` 👊. 
