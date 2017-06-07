@@ -11,7 +11,7 @@ With blockchain, it doesn't have to be that way. Whether you have lots of ether 
 You can.
 
 - Add multiple ethereum addresses.
-- Display the aggregate balance of ETH (and amount in USD).
+- Display the aggregate balance of ETH (and amount in USD) and Tokens (REP only for now).
 - Display the historical balance and price (in USD).
 
 You don't have ether? Then add [these two](https://medium.com/@slacknation/vitaliks-ether-holdings-timeline-e6f5aa1dd4ea)
