@@ -6,16 +6,17 @@ const Web3 = require('web3');
 const url = 'https://mainnet.infura.io/NEefAs8cNxYfiJsYCQjc';
 const provider = new Web3.providers.HttpProvider(url);
 const web3 = new Web3(provider);
+const abi = require('human-standard-token-abi');
 const numeral = require('numeral');
 const block_interval = 15;
 global.fetch = require('node-fetch');
 const cc = require('cryptocompare');
 const moment = require('moment');
+const Token = web3.eth.contract(abi)
 
 let bot = new Bot()
 
 // ROUTING
-
 bot.onEvent = function(session, message) {
   switch (message.type) {
     case 'Init':
@@ -89,36 +90,67 @@ function onCommand(session, command) {
     case 'add_accounts':
       add_accounts_response(session)
       break
+    case 'track_token':
+      console.log('*** track_token', arg)
+      session.set('token_address', arg);
+      sendMessage(session, 'You are now tracking Augur');
+      break
     case 'display_balance':
       if (session.get('accounts') == null || session.get('accounts').length == 0) {
         sendMessage(session, 'No accounts have been added yet');
       }else{
         var date = new Date(new Date() - (arg * 1000 ) )
+        console.log('DATE', date)
         var current_block = web3.eth.blockNumber;
         var block = current_block - ( arg / block_interval);
         var formatted_date = moment(date).utc().format('MMMM Do YYYY, h:mm:ss a');
         sendMessage(session, `Your balance for ${formatted_date} UTC (block ${block})`);
-
-        var _accounts = session.get('accounts')
+        var eth_usd, rep_eth;
+        var _accounts = session.get('accounts');
         var total = 0;
-        for (var i = 0; i < _accounts.length; i++) {
-          var account = _accounts[i];
-          var balance = web3.eth.getBalance(account, block).toNumber();
-          total+= balance;
-          balance = web3.fromWei(balance, 'ether');
-          balance = numeral(balance).format('0,0.000');
-          sendMessage(session, `${account.slice(0,7)}... has ETH ${balance}`)
-        }
 
         cc.priceHistorical('ETH', ['USD'], date)
         .then(prices => {
-          var unit_price = prices['USD'];
-          total = web3.fromWei(total, 'ether');
-          var usd = numeral(total * unit_price).format('0,0.000');
-          total = numeral(total).format('0,0.000');
-          sendMessage(session, `The total ETH: ${total} \n($${usd}, 1ETH = ${unit_price}USD)`)
+          eth_usd = prices['USD'];
+          return cc.priceHistorical('REP', ['ETH'], date)
         })
-        .catch(console.error)
+        .then(prices => {
+          rep_eth = prices['ETH'];
+          console.log("UNIT PRICES", eth_usd, rep_eth);
+          for (var i = 0; i < _accounts.length; i++) {
+            var account = _accounts[i];
+            // track ether
+            var balance = web3.eth.getBalance(account, block).toNumber();
+            total+= balance;
+            balance = web3.fromWei(balance, 'ether');
+            balance = numeral(balance).format('0,0.000');
+            sendMessage(session, `${account.slice(0,7)}... has ETH ${balance}`)
+
+            // track token
+            var token_address = session.get('token_address');
+            console.log('token_address', token_address);
+            if (token_address) {
+              var token = Token.at(token_address);
+              var token_balance = token.balanceOf(account);
+              var token_in_ether = token_balance * rep_eth;
+              console.log('REP->ETH', token_balance, token_in_ether, rep_eth)
+              if (token_balance > 0) {
+                total+= token_in_ether;
+                token_balance = web3.fromWei(token_balance, 'ether');
+                token_balance = numeral(token_balance.toNumber()).format('0,0.000');
+                token_in_ether = web3.fromWei(token_in_ether, 'ether');
+                token_in_ether = numeral(token_in_ether).format('0,0.000');
+                console.log('TOTAL', total, token_in_ether, total + token_in_ether)
+                sendMessage(session, `${account.slice(0,7)}... has REP ${token_balance}`)
+                sendMessage(session, `Worth ETH ${token_in_ether} \n(1REP = ${rep_eth}ETH)`)
+              }
+            }
+          }
+          total = web3.fromWei(total, 'ether');
+          var usd = numeral(total * eth_usd).format('0,0.000');
+          total = numeral(total).format('0,0.000');
+          sendMessage(session, `The total ETH: ${total} \n($${usd}, 1ETH = ${eth_usd}USD)`)
+        }).catch(console.error)
       }
       break
     }
@@ -145,6 +177,7 @@ function sendMessage(session, message) {
         {type: "button", label: "Add Accounts", value: `add_accounts`},
         {type: "button", label: "List Accounts", value: `list_accounts`},
         {type: "button", label: "Reset Accounts", value: `reset_accounts`},
+        {type: "button", label: "Track Augur Token", value: `track_token 0x48c80F1f4D53D5951e5D5438B54Cba84f29F32a5`},
       ]
     },
     {
