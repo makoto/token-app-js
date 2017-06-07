@@ -45,12 +45,10 @@ function onMessage(session, message) {
     sendMessage(session, 'The state has been reset');
   }
   var command_state = session.get('command_state')
-  // sendMessage(session, 'command state is ' + command_state)
   switch(command_state){
     case 'add_account':
       var account = message.body;
       var accounts = session.get('accounts') || [];
-      console.log('aaa', account, accounts, accounts.indexOf(account))
       if (accounts.indexOf(account) == -1) {
         accounts.push(account);
         session.set('accounts', accounts);
@@ -66,29 +64,20 @@ function onMessage(session, message) {
 }
 
 function onCommand(session, command) {
-  console.log('onCommand', command.content.value)
   session.set('command_state', command.content.value);
   var commands = command.content.value.split(' ');
   var command = commands[0]
-  console.log('command', command)
   var arg = commands[1]
   switch (command) {
     case 'list_accounts':
-      console.log('a1')
       var _accounts = session.get('accounts');
-      console.log('a2')
-      console.log('_accounts', _accounts)
       if (_accounts == null || _accounts.length == 0) {
-        console.log('a3')
         sendMessage(session, 'No accounts are on the list');
       }else{
-        console.log('a4')
         for (var i = 0; i < _accounts.length; i++) {
           sendMessage(session, _accounts[i]);
         }
-        console.log('a5')
       }
-      console.log('6')
       break
     case 'reset_accounts':
       session.reset();
@@ -103,14 +92,11 @@ function onCommand(session, command) {
         sendMessage(session, 'No accounts have been added yet');
       }else{
         var date = new Date(new Date() - (arg * 1000 ) )
-        console.log('Date', date)
         var current_block = web3.eth.blockNumber;
         var block = current_block - ( arg / block_interval);
-        console.log(current_block, block);
         var formatted_date = moment(date).utc().format('MMMM Do YYYY, h:mm:ss a');
         sendMessage(session, `Your balance for ${formatted_date} UTC (block ${block})`);
 
-        // sendMessage(session, `have ${session.get('accounts')} accounts`)
         var _accounts = session.get('accounts')
         var total = 0;
         for (var i = 0; i < _accounts.length; i++) {
@@ -142,13 +128,6 @@ function add_account_response(session){
 
 function welcome(session) {
   sendMessage(session, `Welcome to TokenBalances.  `)
-}
-
-function donate(session) {
-  // request $1 USD at current exchange rates
-  Fiat.fetch().then((toEth) => {
-    session.requestEth(toEth.USD(1))
-  })
 }
 
 // HELPERS
