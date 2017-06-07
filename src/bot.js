@@ -1,12 +1,15 @@
 const Bot = require('./lib/Bot')
 const SOFA = require('sofa-js')
-const Fiat = require('./lib/Fiat')
+const Fiat = require('./lib/Fiat');
 const account = '0x5a384227b65fa093dec03ec34e111db80a040615';
 const Web3 = require('web3');
 const url = 'https://mainnet.infura.io/V1LOapzeHsyDp8S1fcUF';
 const provider = new Web3.providers.HttpProvider(url);
 const web3 = new Web3(provider);
 const numeral = require('numeral');
+const block_interval = 15;
+global.fetch = require('node-fetch');
+const cc = require('cryptocompare');
 
 let bot = new Bot()
 
@@ -55,8 +58,13 @@ function onMessage(session, message) {
 }
 
 function onCommand(session, command) {
+  console.log('onCommand', command.content.value)
   session.set('command_state', command.content.value);
-  switch (command.content.value) {
+  var commands = command.content.value.split(' ');
+  var command = commands[0]
+  console.log('command', command)
+  var arg = commands[1]
+  switch (command) {
     case 'add_account':
       add_account_response(session)
       break
@@ -64,67 +72,58 @@ function onCommand(session, command) {
       if (session.get('accounts') == null || session.get('accounts').length == 0) {
         sendMessage(session, 'No accounts have been added yet');
       }else{
+        var date = new Date(new Date() - (arg * 1000 ) )
+        console.log('Date', date)
+        var current_block = web3.eth.blockNumber;
+        var block = current_block - ( arg / block_interval);
+        console.log(current_block, block);
+        sendMessage(session, `Your balance for ${date} (block ${block})`);
+
         // sendMessage(session, `have ${session.get('accounts')} accounts`)
         var _accounts = session.get('accounts')
         var total = 0;
         for (var i = 0; i < _accounts.length; i++) {
           var account = _accounts[i];
-          var balance = web3.eth.getBalance(account).toNumber();
+          var balance = web3.eth.getBalance(account, block).toNumber();
           total+= balance;
           balance = web3.fromWei(balance, 'ether');
           balance = numeral(balance).format('0,0.000');
-          sendMessage(session, `${account.slice(0,7)}... has ${balance} ether`)
+          sendMessage(session, `${account.slice(0,7)}... has ETH ${balance}`)
         }
-        total = web3.fromWei(total, 'ether');
-        total = numeral(total).format('0,0.000');
-        sendMessage(session, `The total balance is ${total} ether`)
+
+        cc.priceHistorical('ETH', ['USD'], date)
+        .then(prices => {
+          console.log(prices)
+          var unit_price = prices['USD'];
+          total = web3.fromWei(total, 'ether');
+          var usd = numeral(total * unit_price).format('0,0.000');
+          total = numeral(total).format('0,0.000');
+          sendMessage(session, `The total balance is ETH ${total} ($${usd}, 1ETH = ${unit_price}USD)`)
+        })
+        .catch(console.error)
+
+        // Fiat.fetch().then((fiat) => {
+        //   total = web3.fromWei(total, 'ether');
+        //   console.log('fiat', fiat);
+        //   var usd = fiat.USD.fromEth(total);
+        //   total = numeral(total).format('0,0.000');
+        //   sendMessage(session, `The total balance is ETH ${total} ($${usd})`)
+        //
+        //   // Basic Usage:
+        //
+        //
+        // })
       }
       break
     }
 }
 
-function onPayment(session, message) {
-  if (message.fromAddress == session.config.paymentAddress) {
-    // handle payments sent by the bot
-    if (message.status == 'confirmed') {
-      // perform special action once the payment has been confirmed
-      // on the network
-    } else if (message.status == 'error') {
-      // oops, something went wrong with a payment we tried to send!
-    }
-  } else {
-    // handle payments sent to the bot
-    if (message.status == 'unconfirmed') {
-      // payment has been sent to the ethereum network, but is not yet confirmed
-      sendMessage(session, `Thanks for the payment! 🙏`);
-    } else if (message.status == 'confirmed') {
-      // handle when the payment is actually confirmed!
-    } else if (message.status == 'error') {
-      sendMessage(session, `There was an error with your payment!🚫`);
-    }
-  }
-}
-
 function add_account_response(session){
-  sendMessageWithoutControl(session, 'Please copy&paste your ethe address below');
+  sendMessage(session, 'Please copy&paste your ether address below');
 }
-
-function eth(session){
-  let balance = web3.eth.getBalance(account).toNumber();
-  sendMessage(session, 'hello eth' + balance);
-}
-
-// STATES
 
 function welcome(session) {
-  sendMessage(session, `Welcome to balance!`)
-}
-
-// example of how to store state on each user
-function count(session) {
-  let count = (session.get('count') || 0) + 1
-  session.set('count', count)
-  sendMessage(session, `${count}`)
+  sendMessage(session, `Welcome to TokenBalances.  `)
 }
 
 function donate(session) {
@@ -135,23 +134,24 @@ function donate(session) {
 }
 
 // HELPERS
-
-function sendMessageWithoutControl(session, message) {
-  let controls = [
-    {type: 'button', label: 'Add Account', value: 'add_account'},
-    {type: 'button', label: 'Display Balance', value: 'display_balance'}
-  ]
-  session.reply(SOFA.Message({
-    body: message,
-    showKeyboard: false,
-  }))
-}
-
-
+const yesterday = 1 * 60 * 60 * 24;
+const month_ago = yesterday * 30;
+const year_ago = yesterday * 365;
 function sendMessage(session, message) {
   let controls = [
     {type: 'button', label: 'Add Account', value: 'add_account'},
-    {type: 'button', label: 'Display Balance', value: 'display_balance'}
+    // {type: 'button', label: 'Display Balance', value: 'display_balance'},
+    {
+      type: "group",
+      label: "Display Balance",
+      controls: [
+        {type: "button", label: "Now", value: `display_balance ${0}`},
+        {type: "button", label: "Yesterday", value: `display_balance ${yesterday}`},
+        {type: "button", label: "1 month ago", value: `display_balance ${month_ago}`},
+        {type: "button", label: "1 year ago", value: `display_balance ${year_ago}`},
+        {type: "button", label: "2 years ago", value: `display_balance ${year_ago * 1.5}`}
+      ]
+    }
   ]
   session.reply(SOFA.Message({
     body: message,
