@@ -96,14 +96,20 @@ function onCommand(session, command) {
       sendMessage(session, 'You are now tracking Augur');
       break
     case 'display_balance':
+      var date;
       if (session.get('accounts') == null || session.get('accounts').length == 0) {
         sendMessage(session, 'No accounts have been added yet');
       }else{
-        var date = new Date(new Date() - (arg * 1000 ) )
-        console.log('DATE', date)
-        var current_block = web3.eth.blockNumber;
-        var block = current_block - ( arg / block_interval);
-        var formatted_date = moment(date).utc().format('MMMM Do YYYY, h:mm:ss a');
+        if (arg == -1) {
+          // The day one of Vitalik's account () had its first 0.2 Ether
+          // https://etherscan.io/tx/0x13ae555f06f0ed867514eade329fa7bd439fa568855c0de8939557a949b4de30
+          var block = 207971;
+          date = new Date(web3.eth.getBlock(block).timestamp * 1000);
+        }else{
+          date = new Date(new Date() - (arg * 1000 ) )
+          var block = web3.eth.blockNumber - ( arg / block_interval);
+        }
+          var formatted_date = moment(date).utc().format('MMMM Do YYYY, h:mm:ss a');
         sendMessage(session, `Your balance for ${formatted_date} UTC (block ${block})`);
         var eth_usd, rep_eth;
         var _accounts = session.get('accounts');
@@ -123,7 +129,7 @@ function onCommand(session, command) {
             var balance = web3.eth.getBalance(account, block).toNumber();
             total+= balance;
             balance = web3.fromWei(balance, 'ether');
-            balance = numeral(balance).format('0,0.000');
+            balance = numeral(balance).format('0.00a');
             sendMessage(session, `${account.slice(0,7)}... has ETH ${balance}`)
 
             // track token
@@ -137,19 +143,19 @@ function onCommand(session, command) {
               if (token_balance > 0) {
                 total+= token_in_ether;
                 token_balance = web3.fromWei(token_balance, 'ether');
-                token_balance = numeral(token_balance.toNumber()).format('0,0.000');
+                token_balance = numeral(token_balance.toNumber()).format('0.00a');
                 token_in_ether = web3.fromWei(token_in_ether, 'ether');
-                token_in_ether = numeral(token_in_ether).format('0,0.000');
+                token_in_ether = numeral(token_in_ether).format('0.00a');
                 console.log('TOTAL', total, token_in_ether, total + token_in_ether)
                 sendMessage(session, `${account.slice(0,7)}... has REP ${token_balance}`)
-                sendMessage(session, `Worth ETH ${token_in_ether} \n(1REP = ${rep_eth}ETH)`)
+                sendMessage(session, `Worth ETH${token_in_ether} \n(1REP = ETH ${rep_eth})`)
               }
             }
           }
           total = web3.fromWei(total, 'ether');
-          var usd = numeral(total * eth_usd).format('0,0.000');
-          total = numeral(total).format('0,0.000');
-          sendMessage(session, `The total ETH: ${total} \n($${usd}, 1ETH = ${eth_usd}USD)`)
+          var usd = numeral(total * eth_usd).format('0.00a');
+          total = numeral(total).format('0.00a');
+          sendMessage(session, `The total ETH: ${total} \n($${usd}, 1ETH = $${eth_usd})`)
         }).catch(console.error)
       }
       break
@@ -188,7 +194,7 @@ function sendMessage(session, message) {
         {type: "button", label: "Yesterday", value: `display_balance ${yesterday}`},
         {type: "button", label: "1 month ago", value: `display_balance ${month_ago}`},
         {type: "button", label: "1 year ago", value: `display_balance ${year_ago}`},
-        {type: "button", label: "2 years ago", value: `display_balance ${year_ago * 1.5}`}
+        {type: "button", label: "Back in a day 👶", value: `display_balance ${-1}`}
       ]
     }
   ]
